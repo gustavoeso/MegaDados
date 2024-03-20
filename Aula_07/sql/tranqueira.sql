@@ -1,3 +1,4 @@
+
 DROP DATABASE IF EXISTS tranqueira;
 CREATE DATABASE tranqueira;
 USE tranqueira;
