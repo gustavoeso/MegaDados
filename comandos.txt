@@ -1,0 +1,5 @@
+Backwards engineering - DDL para diagrama:
+Control+r
+
+Forward engineering - diagrama para DDL:
+Control + g (dentro do diagrama criado)
