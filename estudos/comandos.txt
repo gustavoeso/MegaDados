@@ -3,3 +3,5 @@ Control+r
 
 Forward engineering - diagrama para DDL:
 Control + g (dentro do diagrama criado)
+
+quando diamante do diagrama das tabelas estiver pintado, NOT NULL, quando estiver vazio, não precisa do NOT NULL na DDL.
