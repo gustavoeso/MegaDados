@@ -1,1 +1,8 @@
 .env
+test.csv
+train.csv
+station.csv
+status.csv
+trip.csv
+weather.csv
+.ipynb_checkpoints
