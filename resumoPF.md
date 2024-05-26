@@ -1,69 +1,120 @@
-# Normal Forms (Formas Normais) em Bancos de Dados
+# Formas Normais (Normal Forms) em Bancos de Dados
 
-Quando se fala em NF no contexto de bancos de dados, estamos nos referindo às "Formas Normais" (Normal Forms) que são usadas para avaliar e melhorar a qualidade do design de um banco de dados relacional. Existem várias formas normais, mas as mais comuns são a Primeira Forma Normal (1NF), a Segunda Forma Normal (2NF) e a Terceira Forma Normal (3NF). Vamos analisar se a tabela de gastos para departamentos de filiais de uma empresa está em cada uma dessas formas normais.
+A normalização de bancos de dados é um processo de organização das tabelas e colunas de um banco de dados relacional para minimizar a redundância e dependência. O objetivo da normalização é dividir as grandes tabelas em tabelas menores e ligá-las usando relacionamentos. As Formas Normais (Normal Forms) são usadas para avaliar e melhorar a qualidade do design do banco de dados. Aqui estão as formas normais mais comuns:
 
 ## Primeira Forma Normal (1NF)
+### Definição:
 Uma tabela está na Primeira Forma Normal (1NF) se:
 - Todos os atributos contêm apenas valores atômicos (não divisíveis).
 - Não há repetição de grupos de atributos.
 
-**Análise:**
-- A tabela fornecida não possui valores repetidos ou não atômicos. Cada célula contém um valor único e indivisível.
-- Não há repetição de grupos de atributos.
+### Como Verificar:
+1. **Valores Atômicos**: Certifique-se de que cada coluna da tabela contém valores únicos e indivisíveis. Por exemplo, uma coluna "endereço" deve ser dividida em "rua", "cidade", "estado" etc.
+2. **Ausência de Grupos Repetidos**: Verifique se a tabela não contém grupos de colunas repetidas. Cada coluna deve representar um único atributo do objeto que a tabela está modelando.
 
-Portanto, a tabela está na **Primeira Forma Normal (1NF)**.
+### Exemplo:
+Uma tabela de clientes com uma única coluna para telefones que contém vários números de telefone violaria a 1NF. Para estar na 1NF, você deve criar uma tabela separada para números de telefone.
+
+```sql
+-- Tabela violando a 1NF
+CREATE TABLE clientes (
+    id INT PRIMARY KEY,
+    nome VARCHAR(100),
+    telefones VARCHAR(255)  -- Pode conter vários números
+);
+
+-- Tabela normalizada na 1NF
+CREATE TABLE clientes (
+    id INT PRIMARY KEY,
+    nome VARCHAR(100)
+);
+
+CREATE TABLE telefones (
+    id_cliente INT,
+    telefone VARCHAR(20),
+    FOREIGN KEY (id_cliente) REFERENCES clientes(id)
+);
+```
 
 ## Segunda Forma Normal (2NF)
+### Definição:
 Uma tabela está na Segunda Forma Normal (2NF) se:
 - Está na 1NF.
 - Todos os atributos não chave são totalmente dependentes de toda a chave primária (não apenas uma parte dela).
 
-Para uma tabela estar na 2NF, ela deve estar na 1NF e, se a chave primária for composta (mais de um atributo), cada atributo não chave deve depender da chave inteira.
+### Como Verificar:
+1. **1NF**: Verifique se a tabela está na 1NF.
+2. **Dependência Total**: Se a chave primária for composta (mais de um atributo), cada atributo não chave deve depender da chave inteira, não apenas de uma parte dela.
 
-**Análise:**
-- A chave primária da tabela é composta por `id_filial` e `id_departamento`.
-- `descricao` e `valor` são dependentes de ambos os atributos da chave primária (`id_filial` e `id_departamento`).
-- `id_cidade` e `cidade` são dependentes apenas de `id_filial`, não de `id_departamento`.
+### Exemplo:
+Uma tabela de pedidos com `id_pedido` e `id_produto` como chave primária composta deve garantir que todos os atributos não chave dependem de ambos `id_pedido` e `id_produto`.
 
-Portanto, a tabela **não está na Segunda Forma Normal (2NF)**, pois `id_cidade` e `cidade` são dependentes parcialmente de `id_filial`.
+```sql
+-- Tabela violando a 2NF
+CREATE TABLE pedidos_produtos (
+    id_pedido INT,
+    id_produto INT,
+    nome_produto VARCHAR(100),  -- Depende apenas de id_produto
+    quantidade INT,
+    PRIMARY KEY (id_pedido, id_produto)
+);
+
+-- Tabela normalizada na 2NF
+CREATE TABLE pedidos (
+    id_pedido INT PRIMARY KEY,
+    data_pedido DATE
+);
+
+CREATE TABLE produtos (
+    id_produto INT PRIMARY KEY,
+    nome_produto VARCHAR(100)
+);
+
+CREATE TABLE pedidos_produtos (
+    id_pedido INT,
+    id_produto INT,
+    quantidade INT,
+    PRIMARY KEY (id_pedido, id_produto),
+    FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido),
+    FOREIGN KEY (id_produto) REFERENCES produtos(id_produto)
+);
+```
 
 ## Terceira Forma Normal (3NF)
+### Definição:
 Uma tabela está na Terceira Forma Normal (3NF) se:
 - Está na 2NF.
 - Nenhum atributo não chave é transitivamente dependente da chave primária.
 
-**Análise:**
-- Como a tabela não está na 2NF, ela também não pode estar na 3NF.
+### Como Verificar:
+1. **2NF**: Verifique se a tabela está na 2NF.
+2. **Dependência Transitiva**: Certifique-se de que nenhum atributo não chave depende de outro atributo não chave. Todos os atributos não chave devem depender apenas da chave primária.
 
-## Resumo
-- **1NF**: Sim, a tabela está na 1NF, pois todos os atributos são atômicos e não há repetição de grupos de atributos.
-- **2NF**: Não, a tabela não está na 2NF, pois `id_cidade` e `cidade` são dependentes apenas de `id_filial` e não de toda a chave primária.
-- **3NF**: Não, a tabela não está na 3NF, pois ela não atende aos requisitos da 2NF.
+### Exemplo:
+Uma tabela de funcionários onde `id_departamento` determina `nome_departamento` deve ser normalizada para remover a dependência transitiva.
 
-## Justificativa
-Para normalizar a tabela e movê-la para a 2NF e 3NF, poderíamos separar as dependências parciais e transitivas. Por exemplo:
+```sql
+-- Tabela violando a 3NF
+CREATE TABLE funcionarios (
+    id_funcionario INT PRIMARY KEY,
+    nome_funcionario VARCHAR(100),
+    id_departamento INT,
+    nome_departamento VARCHAR(100)  -- Depende de id_departamento, não da chave primária
+);
 
-- Criar uma tabela separada para cidades:
-  ```sql
-  CREATE TABLE cidade (
-      id_cidade INT PRIMARY KEY,
-      cidade VARCHAR(255)
-  );
-  ```
+-- Tabela normalizada na 3NF
+CREATE TABLE departamentos (
+    id_departamento INT PRIMARY KEY,
+    nome_departamento VARCHAR(100)
+);
 
-- E modificar a tabela original para:
-  ```sql
-  CREATE TABLE gastos (
-      id_filial INT,
-      id_departamento INT,
-      descricao VARCHAR(255),
-      valor DECIMAL(10, 2),
-      id_cidade INT,
-      PRIMARY KEY (id_filial, id_departamento),
-      FOREIGN KEY (id_cidade) REFERENCES cidade(id_cidade)
-  );
-  ```
+CREATE TABLE funcionarios (
+    id_funcionario INT PRIMARY KEY,
+    nome_funcionario VARCHAR(100),
+    id_departamento INT,
+    FOREIGN KEY (id_departamento) REFERENCES departamentos(id_departamento)
+);
+```
 
-Com essa separação, podemos garantir que todas as dependências sejam totais e não transitivas, movendo a tabela para a 2NF e 3NF.
-
-Este markdown explica os conceitos de 1NF, 2NF e 3NF, aplica esses conceitos à tabela fornecida e justifica a necessidade de normalização para alcançar 2NF e 3NF.
+## Conclusão
+As Formas Normais (1NF, 2NF e 3NF) são etapas críticas na normalização de bancos de dados. Cada forma normal ajuda a garantir que o banco de dados seja eficiente, eliminando redundâncias e melhorando a integridade dos dados. A normalização pode inicialmente parecer complexa, mas é essencial para manter um design de banco de dados robusto e escalável.
